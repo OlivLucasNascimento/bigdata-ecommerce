@@ -1,0 +1,17 @@
+
+# Dados gerados durante os testes
+dados/*.jsonl
+
+# Arquivos temporarios do Python
+__pycache__/
+*.pyc
+
+# Configuracoes locais e credenciais
+.env
+.env.*
+
+# Arquivos de log
+*.log
+
+# Arquivos temporarios
+*.tmp

@@ -1,0 +1,81 @@
+
+name: bigdata-ecommerce
+
+services:
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+
+    ports:
+      - "127.0.0.1:9870:9870"
+
+    environment:
+      CLUSTER_NAME: bigdata-ecommerce
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HDFS_CONF_dfs_replication: "1"
+
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+
+    networks:
+      - bigdata-network
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+
+    depends_on:
+      - namenode
+
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HDFS_CONF_dfs_replication: "1"
+      SERVICE_PRECONDITION: "namenode:9870"
+
+    volumes:
+      - datanode_data:/hadoop/dfs/data
+
+    networks:
+      - bigdata-network
+
+  
+  flume:
+    build:
+      context: .
+      dockerfile: flume/Dockerfile
+
+    depends_on:
+      namenode:
+        condition: service_healthy
+      datanode:
+        condition: service_healthy
+
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HDFS_CONF_dfs_replication: "1"
+
+    volumes:
+      - ./flume/flume.conf:/opt/flume/conf/flume.conf:ro
+      - ./flume/acompanhar.sh:/app/flume/acompanhar.sh:ro
+      - ./dados:/app/dados:ro
+
+    command:
+      - /opt/flume/bin/flume-ng
+      - agent
+      - --conf
+      - /opt/flume/conf
+      - --conf-file
+      - /opt/flume/conf/flume.conf
+      - --name
+      - agent
+      - -Dflume.root.logger=INFO,console
+
+    networks:
+      - bigdata-network
+
+volumes:
+  namenode_data:
+  datanode_data:
+
+networks:
+  bigdata-network:
+    driver: bridge
