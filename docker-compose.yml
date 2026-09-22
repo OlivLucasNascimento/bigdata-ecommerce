@@ -1,4 +1,3 @@
-
 name: bigdata-ecommerce
 
 services:
@@ -37,7 +36,7 @@ services:
     networks:
       - bigdata-network
 
-  
+
   flume:
     build:
       context: .
@@ -68,6 +67,61 @@ services:
       - --name
       - agent
       - -Dflume.root.logger=INFO,console
+
+    networks:
+      - bigdata-network
+
+  hbase:
+    image: harisekhon/hbase:1.4
+
+    ports:
+      - "127.0.0.1:16010:16010"
+      - "2181:2181"
+      - "9090:9090"
+
+    networks:
+      - bigdata-network
+
+  flink-jobmanager:
+    build:
+      context: .
+      dockerfile: flink/Dockerfile
+    volumes:
+      - ./dados:/app/dados:ro
+      - ./flink/jobs:/app/jobs:ro
+
+    command: jobmanager
+
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+
+    ports:
+      - "127.0.0.1:8081:8081"
+
+    networks:
+      - bigdata-network
+
+  flink-taskmanager:
+    build:
+      context: .
+      dockerfile: flink/Dockerfile
+
+    command: taskmanager
+
+    depends_on:
+      - flink-jobmanager
+
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 2
+
+    volumes:
+      - ./dados:/app/dados:ro
+      - ./flink/jobs:/app/jobs:ro
 
     networks:
       - bigdata-network
