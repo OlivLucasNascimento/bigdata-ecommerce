@@ -3,7 +3,8 @@ import json
 import random
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 # Tipos de eventos do e-commerce
 TIPOS_EVENTO = [
@@ -28,6 +29,18 @@ def gerar_evento():
     produto = random.choice(PRODUTOS)
     quantidade = random.randint(1, 3)
 
+    
+    # Define o horario atual
+    horario_atual = datetime.now(timezone.utc)
+
+    # Simula atraso em aproximadamente 30% dos eventos
+    if random.random() < 0.30:
+        atraso = random.randint(5, 15)
+        timestamp_evento = horario_atual - timedelta(seconds=atraso)
+    else:
+        timestamp_evento = horario_atual
+
+
     evento = {
         "evento_id": str(uuid.uuid4()),
         "tipo_evento": tipo,
@@ -36,7 +49,7 @@ def gerar_evento():
         "produto_nome": produto["nome"],
         "quantidade": quantidade,
         "valor": round(produto["preco"] * quantidade, 2),
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": timestamp_evento.isoformat()
     }
 
     if tipo == "entrega":
@@ -57,6 +70,8 @@ def gerar_evento():
 
 
 if __name__ == "__main__":
+
+    Path("dados").mkdir(parents=True, exist_ok=True)
 
     print("Iniciando gerador de eventos...")
 
