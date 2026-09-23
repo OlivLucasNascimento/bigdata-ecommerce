@@ -1,4 +1,3 @@
-
 #!/bin/sh
 
 ARQUIVO="/app/dados/eventos.jsonl"

@@ -13,7 +13,7 @@ from pyflink.datastream.functions import (
     RuntimeContext,
 )
 
-CAMINHO_EVENTOS = "/app/dados/eventos.jsonl"
+CAMINHO_EVENTOS = "hdfs://namenode:9000/dados/ecommerce"
 LIMIAR_ALERTA = 2  # a partir de quantos carrinhos abandonados do mesmo produto gera alerta
 
 
@@ -81,9 +81,13 @@ def main():
     env = StreamExecutionEnvironment.get_execution_environment()
     env.set_parallelism(1)
 
-    source = FileSource.for_record_stream_format(
-        StreamFormat.text_line_format(), CAMINHO_EVENTOS
-    ).build()
+    source = (
+        FileSource.for_record_stream_format(
+            StreamFormat.text_line_format(), CAMINHO_EVENTOS
+        )
+        .monitor_continuously(Duration.of_seconds(10))
+        .build()
+    )
 
     linhas = env.from_source(
         source,
